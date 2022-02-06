@@ -12,6 +12,7 @@ const moment = require("moment");
 const axios = require('axios')
 
 const bookingCommand = /book (\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b) (\d{4}\-\d{2}-\d{2})$/
+const registerCommand = /register (\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b)$/
 
 /**
  * Flow
@@ -220,10 +221,11 @@ function isDateValid(date) {
 framework.hears(bookingCommand, function(bot, trigger) {
   responded = true;
   let isValid = true;
-  let date = trigger.message.text.split(' ')[3];
-  let organisation = trigger.message.text.split(' ')[2];
-  let person = trigger.person;
-  let room = bot.room.id;
+  const splitText = trigger.message.text.split(' ');
+  const date = splitText[3];
+  const organisation = splitText[2];
+  const person = trigger.person;
+  const room = bot.room.id;
   if (!isDateValid(date)) {
     isValid = false;
     bot.say('markdown', `date ${date} is not valid`)
@@ -232,9 +234,9 @@ framework.hears(bookingCommand, function(bot, trigger) {
   const data = {
     organisation,
     organiser: {
-      id: trigger.person.id,
-      emails: trigger.person.emails,
-      name: trigger.person.displayName
+      id: person.id,
+      emails: person.emails,
+      name: person.displayName
     },
     date,
     room
@@ -255,6 +257,17 @@ framework.hears(bookingCommand, function(bot, trigger) {
     bot.say('markdown', 'hello World')
       .catch(e => console.error('failed to say book'));
   }
+})
+
+framework.hears(registerCommand, function(bot, trigger) {
+  responded = true;
+  const event = trigger.message.text.split(' ')[2];
+  const room = bot.room.id;
+  console.log(`event ${event}`);
+  console.log(`room ${room}`);
+  bot.say('markdown', `**event** ${event}
+    **room** ${room}`)
+    .catch(err => console.error('error responding to register command'))
 })
 
 /* On mention with unexpected bot command
