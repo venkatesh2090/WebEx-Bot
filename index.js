@@ -10,10 +10,12 @@ app.use(express.static('images'));
 const config = require("./config.json");
 const moment = require("moment");
 const axios = require('axios');
+const process = require('process');
 
 const bookingCommand = /book (\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b) (\d{4}\-\d{2}-\d{2})$/
 const registerCommand = /register (\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b)$/
 const listEventsCommand = 'event list'
+const EVENTS_BASE_URL = process.env.EVENTS_BASE_URL;
 
 /**
  * Flow
@@ -124,7 +126,7 @@ framework.hears(bookingCommand, async function(bot, trigger) {
     try {
       const res = await axios({
         method: 'PUT',
-        url: 'https://blooming-savannah-87825.herokuapp.com/event',
+        url: `${EVENTS_BASE_URL}/event`,
         data 
       });
       const { event_id, registration_id } = res.data
@@ -146,7 +148,7 @@ framework.hears(listEventsCommand, async function (bot, trigger) {
   try {
     const res = await axios({
       method: 'GET',
-      url: `https://blooming-savannah-87825.herokuapp.com/event/${room}`
+      url: `${EVENTS_BASE_URL}/event/${room}`
     })
     const events = res.data.events;
     let msg = 'events\n';
@@ -171,7 +173,7 @@ framework.hears(registerCommand, async function(bot, trigger) {
   try {
     const res = await axios({
       method: 'POST',
-      url: "https://blooming-savannah-87825.herokuapp.com/register",
+      url: `${EVENTS_BASE_URL}/register`,
       data: {
         event,
         person
