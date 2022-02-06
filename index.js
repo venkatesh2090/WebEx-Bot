@@ -9,6 +9,16 @@ app.use(bodyParser.json());
 app.use(express.static('images'));
 const config = require("./config.json");
 
+const bookingCommand = /book (\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b) (\d{4}\-\d{2}-\d{2})$/
+
+/**
+ * Flow
+ * 1. organiser -> bot book
+ * 2. bot replies with confirmation and display name
+ * 3. organiser -> bot confirm
+ */
+
+
 // init framework
 var framework = new framework(config);
 framework.start();
@@ -200,6 +210,12 @@ framework.hears('reply', function (bot, trigger) {
   bot.reply(trigger.message, msg_attach);
 });
 
+framework.hears(bookingCommand, function(bot, trigger) {
+  responded = true
+  bot.say('markdown', 'hello World')
+    .catch(e => console.error('failed to say book'));
+})
+
 /* On mention with unexpected bot command
    Its a good practice is to gracefully handle unexpected input
 */
@@ -214,6 +230,15 @@ framework.hears(/.*/, function (bot, trigger) {
   responded = false;
 });
 
+/**
+ * TODO: Add our own command list
+ * 1. book ${eventOrganisation} ${date:yyyy/mm/dd} ${time?}
+ * 2. help
+ * 
+ * Backlog
+ * - search 10 matching eventOrganisation given readable name
+ * @param {*} bot  bot
+ */
 function sendHelp(bot) {
   bot.say("markdown", 'These are the commands I can respond to:', '\n\n ' +
     '1. **framework**   (learn more about the Webex Bot Framework) \n' +
@@ -246,3 +271,7 @@ process.on('SIGINT', function () {
     process.exit();
   });
 });
+
+function isDateValid(date) {
+
+}
