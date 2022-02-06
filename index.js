@@ -9,6 +9,7 @@ app.use(bodyParser.json());
 app.use(express.static('images'));
 const config = require("./config.json");
 const moment = require("moment");
+const axios = require('axios')
 
 const bookingCommand = /book (\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b) (\d{4}\-\d{2}-\d{2})$/
 
@@ -220,15 +221,35 @@ framework.hears(bookingCommand, function(bot, trigger) {
   responded = true;
   let isValid = true;
   let date = trigger.message.text.split(' ')[3];
+  let organisation = trigger.message.text.split(' ')[2];
+  let person = trigger.person;
   if (!isDateValid(date)) {
     isValid = false;
     bot.say('markdown', `date ${date} is not valid`)
       .catch(e => console.error("Failed to say book"));
   }
-
-  console.log(isValid);
-  
+  const data = {
+    organisation,
+    organiser: {
+      id: trigger.person.id,
+      emails: trigger.person.emails,
+      name: trigger.person.displayName
+    },
+    date
+  }
+  console.log(data)
   if (isValid) {
+    axios({
+      method: 'PUT',
+      url: 'https://blooming-savannah-87825.herokuapp.com/event',
+      data 
+    }).then(function(res) {
+      if (res.status === 200) {
+        console.log("success")
+      } else {
+        console.error("fail")
+      }
+    }).catch(err => console.error("There was an error processing axios req"))
     bot.say('markdown', 'hello World')
       .catch(e => console.error('failed to say book'));
   }
