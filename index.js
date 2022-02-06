@@ -223,6 +223,7 @@ framework.hears(bookingCommand, function(bot, trigger) {
   let date = trigger.message.text.split(' ')[3];
   let organisation = trigger.message.text.split(' ')[2];
   let person = trigger.person;
+  let room = bot.room.id;
   if (!isDateValid(date)) {
     isValid = false;
     bot.say('markdown', `date ${date} is not valid`)
@@ -235,7 +236,8 @@ framework.hears(bookingCommand, function(bot, trigger) {
       emails: trigger.person.emails,
       name: trigger.person.displayName
     },
-    date
+    date,
+    room
   }
   console.log(data)
   if (isValid) {
