@@ -9,10 +9,11 @@ app.use(bodyParser.json());
 app.use(express.static('images'));
 const config = require("./config.json");
 const moment = require("moment");
-const axios = require('axios')
+const axios = require('axios');
 
 const bookingCommand = /book (\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b) (\d{4}\-\d{2}-\d{2})$/
 const registerCommand = /register (\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b)$/
+const listEventsCommand = 'event list'
 
 /**
  * Flow
@@ -218,7 +219,7 @@ function isDateValid(date) {
   return m.isValid();
 }
 
-framework.hears(bookingCommand, function(bot, trigger) {
+framework.hears(bookingCommand, async function(bot, trigger) {
   responded = true;
   let isValid = true;
   const splitText = trigger.message.text.split(' ');
@@ -243,31 +244,77 @@ framework.hears(bookingCommand, function(bot, trigger) {
   }
   console.log(data)
   if (isValid) {
-    axios({
-      method: 'PUT',
-      url: 'https://blooming-savannah-87825.herokuapp.com/event',
-      data 
-    }).then(function(res) {
-      if (res.status === 200) {
-        console.log("success")
-      } else {
-        console.error("fail")
-      }
-    }).catch(err => console.error("There was an error processing axios req"))
-    bot.say('markdown', 'hello World')
-      .catch(e => console.error('failed to say book'));
+    try {
+      const res = await axios({
+        method: 'PUT',
+        url: 'https://blooming-savannah-87825.herokuapp.com/event',
+        data 
+      });
+      const { event_id, registration_id } = res.data
+      bot.say('markdown', `event id for registration: ${event_id}
+      registration_id for organiser: ${registration_id}`)
+        .catch(e => console.error('failed to say book'));
+    } catch(err) {
+      console.error(err);
+      console.error("There was an error processing axios req")
+      bot.say('markdown', 'error while processing request')
+    }
   }
 })
 
-framework.hears(registerCommand, function(bot, trigger) {
+framework.hears(listEventsCommand, async function (bot, trigger) {
+  responded = true;
+  console.log('here')
+  const room = bot.room.id;
+  try {
+    const res = await axios({
+      method: 'GET',
+      url: `https://blooming-savannah-87825.herokuapp.com/event/${room}`
+    })
+    const events = res.data.events;
+    let msg = 'events\n';
+    for(let i = 0; i < events.length; i++) {
+      const e = events[i];
+      msg += `${i+1} **id**: ${e.id} **organisation**: ${e.organisation}
+      `;
+    }
+    bot.say('markdown', msg)
+      .catch(err => console.error("error while processing event list"))
+  } catch(err) {
+    console.error(err);
+    bot.say('markdown', 'error while processing request');
+    console.error("Error processing request")
+  }
+})
+
+framework.hears(registerCommand, async function(bot, trigger) {
   responded = true;
   const event = trigger.message.text.split(' ')[2];
-  const room = bot.room.id;
-  console.log(`event ${event}`);
-  console.log(`room ${room}`);
-  bot.say('markdown', `**event** ${event}
-    **room** ${room}`)
-    .catch(err => console.error('error responding to register command'))
+  const person = trigger.person.id;
+  try {
+    const res = await axios({
+      method: 'POST',
+      url: "https://blooming-savannah-87825.herokuapp.com/register",
+      data: {
+        event,
+        person
+      }
+    });
+    if (res.status == 200) {
+      bot.say("markdown", `Registered user with registration id
+      ${person}`)
+        .catch(err => console.error("Error when reploying"));
+    } else if (res.status == 200) {
+      bot.say("markdown", "A registration already exists with you")
+        .catch(err => console.error("Error when replying"))
+    } else {
+      bot.say("markdown", "Error: Unknow response")
+        .catch(error => console.error("Error when replying"))
+    }
+  } catch(err) {
+    console.error(err);
+    bot.say("markdown", "Error while requesting")
+  }
 })
 
 /* On mention with unexpected bot command
@@ -287,7 +334,7 @@ framework.hears(/.*/, function (bot, trigger) {
 /**
  * TODO: Add our own command list
  * 1. book ${eventOrganisation} ${date:yyyy/mm/dd} ${time?}
- * 2. help
+ * 2. h-elp
  * 
  * Backlog
  * - search 10 matching eventOrganisation given readable name
