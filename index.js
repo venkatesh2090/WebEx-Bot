@@ -169,10 +169,14 @@ framework.hears(listEventsCommand, async function (bot, trigger) {
 framework.hears(registerCommand, async function(bot, trigger) {
   responded = true;
   const event = trigger.message.text.split(' ')[2];
-  const person = trigger.person.id;
+  const person = {
+    id: trigger.person.id,
+    emails: trigger.person.emails,
+    name: trigger.person.displayName
+  };
   try {
     const res = await axios({
-      method: 'POST',
+      method: 'PUT',
       url: `${EVENTS_BASE_URL}/register`,
       data: {
         event,
@@ -180,7 +184,7 @@ framework.hears(registerCommand, async function(bot, trigger) {
       }
     });
     bot.say("markdown", `Registered user with registration id
-    ${person}`)
+    ${res.data.registration_id} with`)
       .catch(err => console.error("Error when reploying"));
   } catch(err) {
     if (err.response.status == 409) {
