@@ -177,20 +177,17 @@ framework.hears(registerCommand, async function(bot, trigger) {
         person
       }
     });
-    if (res.status == 200) {
-      bot.say("markdown", `Registered user with registration id
-      ${person}`)
-        .catch(err => console.error("Error when reploying"));
-    } else if (res.status == 200) {
+    bot.say("markdown", `Registered user with registration id
+    ${person}`)
+      .catch(err => console.error("Error when reploying"));
+  } catch(err) {
+    if (err.response.status == 409) {
       bot.say("markdown", "A registration already exists with you")
         .catch(err => console.error("Error when replying"))
     } else {
-      bot.say("markdown", "Error: Unknow response")
-        .catch(error => console.error("Error when replying"))
+      console.error(err);
+      bot.say("markdown", "Error while requesting")
     }
-  } catch(err) {
-    console.error(err);
-    bot.say("markdown", "Error while requesting")
   }
 })
 
