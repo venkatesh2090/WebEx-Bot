@@ -8,6 +8,7 @@ var app = express();
 app.use(bodyParser.json());
 app.use(express.static('images'));
 const config = require("./config.json");
+const moment = require("moment");
 
 const bookingCommand = /book (\b[0-9a-f]{8}\b-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-\b[0-9a-f]{12}\b) (\d{4}\-\d{2}-\d{2})$/
 
@@ -210,10 +211,27 @@ framework.hears('reply', function (bot, trigger) {
   bot.reply(trigger.message, msg_attach);
 });
 
+function isDateValid(date) {
+  let m = moment(date, 'YYYY-MM-DD');
+  return m.isValid();
+}
+
 framework.hears(bookingCommand, function(bot, trigger) {
-  responded = true
-  bot.say('markdown', 'hello World')
-    .catch(e => console.error('failed to say book'));
+  responded = true;
+  let isValid = true;
+  let date = trigger.message.text.split(' ')[3];
+  if (!isDateValid(date)) {
+    isValid = false;
+    bot.say('markdown', `date ${date} is not valid`)
+      .catch(e => console.error("Failed to say book"));
+  }
+
+  console.log(isValid);
+  
+  if (isValid) {
+    bot.say('markdown', 'hello World')
+      .catch(e => console.error('failed to say book'));
+  }
 })
 
 /* On mention with unexpected bot command
@@ -271,7 +289,3 @@ process.on('SIGINT', function () {
     process.exit();
   });
 });
-
-function isDateValid(date) {
-
-}
