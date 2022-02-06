@@ -183,8 +183,8 @@ framework.hears(registerCommand, async function(bot, trigger) {
         person
       }
     });
-    bot.say("markdown", `Registered user with registration id
-    ${res.data.registration_id} with`)
+    bot.say("markdown", `Registered ${person.displayName} with registration id
+    ${res.data.registration_id}`)
       .catch(err => console.error("Error when reploying"));
   } catch(err) {
     if (err.response.status == 409) {
